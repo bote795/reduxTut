@@ -100,7 +100,19 @@ function handleDeleteTodo(todo){
     }
     
 }
-
+function handleInitialData(){
+    return (dispatch) =>{
+        return Promise.all([
+            API.fetchTodos(),
+            API.fetchGoals()
+        ]).then(([todos, goals]) => {
+            dispatch(receiveDataAction(
+                todos,
+                goals
+            ))
+        })
+    }
+}
 const checker = (store) => (next) => (action) => {
     if (
         action.type === ADD_TODO &&
@@ -126,12 +138,6 @@ const logger = (store) => (next) => action => {
     return result;
 }
 
-const thunk = (store) => (next) => (action) => {
-    if( typeof action === 'function'){
-        return action(store.dispatch)
-    }
-    return next(action)
-}
 
 // Reducer function
 function todos(state = [], action) {
@@ -177,4 +183,4 @@ const store = Redux.createStore(Redux.combineReducers({
     todos,
     goals,
     loading
-}), Redux.applyMiddleware(checker, logger, thunk))
+}), Redux.applyMiddleware(ReduxThunk.default, checker, logger))
