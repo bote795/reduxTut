@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>TODOs/GOALS</title>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js'></script>
+    <script src='https://unpkg.com/react@16.3.0-alpha.1/umd/react.development.js'></script>
+    <script src='https://unpkg.com/react-dom@16.3.0-alpha.1/umd/react-dom.development.js'></script>
+    <script src='https://unpkg.com/babel-standalone@6.15.0/babel.min.js'></script>
+    <script src='https://tylermcginnis.com/goals-todos-api/index.js'></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
+</head>
+<body>
+    <div id="app">
+    </div>
+</body>
+    <script src="index.js"></script>
+    <script type="text/babel">
+        function List(props){
+            const {items} = props;
+            return (
+                <ul>
+                    {items.map((item) => (
+                        <li key={item.id}>
+                                <span 
+                                    style={{textDecoration: item.complete ? 'line-through' : 'none'}}
+                                    onClick={() => props.toggle && props.toggle(item)}>
+                                {item.name}
+                            </span>
+                            <button
+                            onClick={() => props.remove(item)}>
+                            X
+                            </button>
+                         </li>
+                    ))
+                    }
+                </ul>
+            )
+        }
+        class Todos extends React.Component {
+            addItem = (e) => {
+                e.preventDefault();
+                const name = this.input.value;
+                return API.saveTodo(name)
+                    .then((newTodo)=> {
+                        this.input.value = '';
+                        this.props.store.dispatch(addTodoAction(newTodo));
+                    })
+                    .catch( () => alert('There was an error. Try again.'))
+                
+
+            }
+            removeItem = (todo) => { 
+                this.props.store.dispatch(removeTodoAction(todo.id)); 
+                return API.deleteTodo(todo.id)
+                    .catch(() => {
+                        this.props.store.dispatch(addTodoAction(todo)); 
+                        alert('An error occured. Try again.')
+                    })
+            }
+            toggleItem = (todo) => {
+                this.props.store.dispatch(toggleTodoAction(todo.id));
+                return API.saveTodoToggle(todo.id)
+                    .catch(() => {
+                        this.props.store.dispatch(toggleTodoAction(todo.id)); 
+                        alert('An error occured. Try again.')
+                    })
+            }
+            render(){
+                const {todos} = this.props;
+                return (
+                    <div>
+                        <h1>Todo List</h1>
+                        <input 
+                        type="text"
+                        placeholder="Add Todo"
+                        ref={(input) => this.input = input}
+                        />
+                        <button onClick={this.addItem}>add todo</button>
+                        <List 
+                            items={todos}
+                            remove={this.removeItem}
+                            toggle={this.toggleItem}
+                        />
+                    </div>
+                );
+            }
+        }
+        class Goals extends React.Component {
+            addItem = (e) => {
+                e.preventDefault();
+                const name = this.input.value;
+                  return API.saveGoal(name)
+                    .then((newGoal)=> {
+                        this.input.value = '';
+                        this.props.store.dispatch(addGoalAction(newGoal));
+                    })
+                    .catch( () => alert('There was an error. Try again.'))
+            }
+            removeItem = (goal) => { 
+                this.props.store.dispatch(removeGoalAction(goal.id)); 
+                return API.deleteGoal(goal.id)
+                    .catch(() => {
+                        this.props.store.dispatch(addGoalAction(goal)); 
+                        alert('An error occured. Try again.')
+                    })
+            }
+            render(){
+                const {goals} = this.props;
+                return (
+                    <div>
+                        <h1>Goals List</h1>
+                        <input
+                            type="text"
+                            placeholder="Add Goal"
+                            ref={(input) => this.input = input}
+                        />
+                        <button onClick={this.addItem}>add Goal</button>
+                        <List 
+                            items={goals}
+                            remove={this.removeItem}
+                        />
+                    </div>
+                )
+                }
+            }
+            class App extends React.Component {
+                componentDidMount(){
+                    const { store } = this.props;
+
+                    Promise.all([
+                        API.fetchTodos(),
+                        API.fetchGoals()
+                    ]).then(([todos, goals]) => {
+                        store.dispatch(receiveDataAction(
+                            todos,
+                            goals
+                        ))
+                    })
+
+                    store.subscribe(() => this.forceUpdate())
+                }
+
+                render(){
+                    const {store} = this.props;
+                    const { todos, goals, loading } = store.getState();
+                    if (loading){
+                        return <h3>loading</h3>
+                    }
+                    return (
+                        <div>
+                            <Todos todos={todos} store={store}/>
+                            <Goals goals={goals} store={store}/>
+                        </div>
+                    )
+                }
+            }
+            ReactDOM.render(
+            <App store={store}/>,
+            document.getElementById('app')
+        );
+
+    </script>
+</html>
