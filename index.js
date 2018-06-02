@@ -47,7 +47,48 @@ function receiveDataAction(todos, goals) {
     }
     
 }
+function handleAddGoal(name, cb){
+    return (dispatch) => {
+        return API.saveGoal(name)
+        .then((newGoal)=> {
+           dispatch(addGoalAction(newGoal));
+           cb();
+        })
+        .catch( () => alert('There was an error. Try again.'))
+    }
+}
 
+function handleDeleteGoal(goal){
+    return (dispatch) => {
+        dispatch(removeGoalAction(goal.id)); 
+        return API.deleteGoal(goal.id)
+            .catch(() => {
+                dispatch(addGoalAction(goal)); 
+                alert('An error occured. Try again.')
+            })
+    }
+}
+function handleAddTodo(name, cb){
+    return (dispatch) => {
+        return API.saveTodo(name)
+        .then((newTodo)=> {
+            cb();
+           dispatch(addTodoAction(newTodo));
+        })
+        .catch( () => alert('There was an error. Try again.'))
+   
+    }
+}
+function handleToggleTodo(todo){
+    return (dispatch) =>{
+        dispatch(toggleTodoAction(todo.id));
+        return API.saveTodoToggle(todo.id)
+            .catch(() => {
+                dispatch(toggleTodoAction(todo.id)); 
+                alert('An error occured. Try again.')
+            })
+    }
+}
 function handleDeleteTodo(todo){
     return (dispatch) => {
         dispatch(removeTodoAction(todo.id)); 
